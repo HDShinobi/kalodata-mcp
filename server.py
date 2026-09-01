@@ -329,6 +329,124 @@ async def video_detail(
     result = await call_kalodata("/openapi/v1/video/detail", payload)
     return json.dumps(result, indent=2, ensure_ascii=False)
 
+@mcp.tool()
+async def shop_rank(
+    region: str = "US",
+    language: str = "en-US",
+    currency: str = "USD",
+    date_range: str = "last7Day",
+    category_id: Optional[str] = None,
+    revenue_range: Optional[Dict[str, Any]] = None,
+    shop_type: Optional[str] = None,
+    sort_field: Optional[Dict[str, str]] = None,
+    page_number: int = 1
+) -> str:
+    """
+    Retorna o ranking das lojas (shops) com maior faturamento no TikTok Shop.
+    Permite filtrar por categoria de produto, faixa de receita e tipo de loja.
+    """
+    if sort_field is None:
+        sort_field = {"field": "revenue", "type": "DESC"}
+
+    base = {
+        "region": region,
+        "language": language,
+        "currency": currency,
+        "date_range": date_range,
+        "sort_field": sort_field,
+        "page_number": page_number
+    }
+    extra = {
+        "category_id": category_id,
+        "revenue_range": revenue_range,
+        "shop_type": shop_type
+    }
+    payload = _clean_payload(base, extra)
+    result = await call_kalodata("/openapi/v1/shop/rank", payload)
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+@mcp.tool()
+async def shop_detail(
+    shop_id: str,
+    region: str = "US",
+    language: str = "en-US",
+    currency: str = "USD",
+    date_range: str = "last7Day"
+) -> str:
+    """
+    Retorna os detalhes e métricas de desempenho de uma loja específica no TikTok Shop através do seu ID de loja.
+    Exibe dados de vendas totais, produtos mais vendidos, canal de afiliados e divisão de faturamento.
+    """
+    payload = {
+        "shop_id": shop_id,
+        "region": region,
+        "language": language,
+        "currency": currency,
+        "date_range": date_range
+    }
+    result = await call_kalodata("/openapi/v1/shop/detail", payload)
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+@mcp.tool()
+async def livestream_rank(
+    region: str = "US",
+    language: str = "en-US",
+    currency: str = "USD",
+    date_range: str = "last7Day",
+    category_id: Optional[str] = None,
+    shop_id: Optional[str] = None,
+    creator_id: Optional[str] = None,
+    revenue_range: Optional[Dict[str, Any]] = None,
+    sort_field: Optional[Dict[str, str]] = None,
+    page_number: int = 1
+) -> str:
+    """
+    Retorna o ranking de transmissões ao vivo (livestreams) ordenadas por receita gerada no TikTok Shop.
+    Útil para analisar quais lives geraram maior faturamento, pico de espectadores e produtos promovidos.
+    """
+    if sort_field is None:
+        sort_field = {"field": "revenue", "type": "DESC"}
+
+    base = {
+        "region": region,
+        "language": language,
+        "currency": currency,
+        "date_range": date_range,
+        "sort_field": sort_field,
+        "page_number": page_number
+    }
+    extra = {
+        "category_id": category_id,
+        "shop_id": shop_id,
+        "creator_id": creator_id,
+        "revenue_range": revenue_range
+    }
+    payload = _clean_payload(base, extra)
+    result = await call_kalodata("/openapi/v1/livestream/rank", payload)
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+@mcp.tool()
+async def livestream_detail(
+    livestream_id: str,
+    region: str = "US",
+    language: str = "en-US",
+    currency: str = "USD",
+    date_range: str = "last7Day"
+) -> str:
+    """
+    Retorna o detalhamento completo e estatísticas de uma transmissão ao vivo (livestream) específica no TikTok Shop.
+    Fornece métricas de audiência, duração da live, faturamento total, GPM e produtos vendidos.
+    """
+    payload = {
+        "livestream_id": livestream_id,
+        "region": region,
+        "language": language,
+        "currency": currency,
+        "date_range": date_range
+    }
+    result = await call_kalodata("/openapi/v1/livestream/detail", payload)
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
 if __name__ == "__main__":
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 8000))
@@ -336,6 +454,7 @@ if __name__ == "__main__":
     mcp.settings.host = host
     mcp.settings.port = port
     print(f"[kalodata-mcp] Servidor iniciando em http://{host}:{port}/mcp")
-    print(f"[kalodata-mcp] Transporte: streamable-http | 8 ferramentas registradas")
+    print(f"[kalodata-mcp] Transporte: streamable-http | 12 ferramentas registradas")
     mcp.run(transport="streamable-http")
+
 
