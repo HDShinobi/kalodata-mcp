@@ -1,88 +1,115 @@
 # Kalodata MCP Server (TikTok Shop Analytics)
 
-Servidor MCP (**Model Context Protocol**) construído em Python com o SDK oficial da Anthropic/MCP (`FastMCP`). Funciona como um wrapper completo para a **Kalodata Open API**, permitindo que assistentes e agentes de Inteligência Artificial (como o **Perplexity AI**, Claude, Cursor, ChatGPT e outros) realizem pesquisas aprofundadas de mercado, análise de nichos, produtos vencedores, criadores e vídeos virais do TikTok Shop.
+Servidor MCP (**Model Context Protocol**) construído em Python com o SDK oficial (`FastMCP` v1.x). Funciona como um wrapper completo para a **Kalodata Open API**, permitindo que assistentes e agentes de IA (como **Perplexity AI**, Claude, Cursor e outros) realizem pesquisas aprofundadas de mercado, análise de nichos, produtos vencedores, criadores e vídeos virais do TikTok Shop.
 
 ---
 
 ## 📌 O que é este projeto?
 
-Este servidor expõe 8 ferramentas MCP de alta performance para consulta de dados do TikTok Shop:
+Este servidor expõe 8 ferramentas MCP para consulta de dados do TikTok Shop:
 
-1. `category_rank`: Ranking de categorias de produtos ordenado por receita (faturamento).
-2. `category_detail`: Detalhes completos de uma categoria de produtos.
-3. `product_rank`: Ranking dos produtos mais vendidos (filtro por preço, comissão de afiliados, lojas, etc).
-4. `product_detail`: Detalhes completos e métricas de um produto específico.
-5. `creator_rank`: Ranking dos principais criadores/influenciadores no TikTok Shop (`/openapi/v1/crator/rank`).
-6. `creator_detail`: Detalhes e métricas de desempenho de um criador (`/openapi/v1/crator/detail`).
-7. `video_rank`: Ranking dos vídeos virais de vendas mais lucrativos no TikTok Shop.
-8. `video_detail`: Métricas detalhadas de visualização, engajamento e receita de um vídeo.
+1. `category_rank` — Ranking de categorias por receita.
+2. `category_detail` — Detalhes completos de uma categoria.
+3. `product_rank` — Ranking dos produtos mais vendidos.
+4. `product_detail` — Detalhes e métricas de um produto.
+5. `creator_rank` — Ranking de criadores/influenciadores.
+6. `creator_detail` — Detalhes e performance de um criador.
+7. `video_rank` — Ranking de vídeos virais de vendas.
+8. `video_detail` — Métricas de um vídeo específico.
 
-O servidor foi projetado com suporte nativo a transporte **Streamable HTTP / SSE**, o que permite hospedá-lo remotamente e registrá-lo diretamente como um **Conector Remoto Personalizado** no Perplexity AI.
+Transporte nativo: **Streamable HTTP** na rota `/mcp`, compatível com Perplexity AI Custom Remote Connectors.
 
 ---
 
 ## 🚀 Setup Local
 
 ### 1. Pré-requisitos
-- Python 3.10 ou superior instalado.
-- Chave de API da Kalodata (`KALODATA_SECRET_KEY`).
+- Python 3.10 ou superior.
+- Chave de API Kalodata (`KALODATA_SECRET_KEY`).
 
-### 2. Criação do Ambiente Virtual e Instalação
-No terminal, dentro da pasta `kalodata-mcp`:
+### 2. Ambiente Virtual e Dependências
 
 ```bash
-# Criar ambiente virtual Python
 python -m venv .venv
 
-# Ativar o ambiente virtual
-# No Windows (PowerShell):
+# Ativar (Windows PowerShell):
 .venv\Scripts\Activate.ps1
-# No Windows (CMD):
-.venv\Scripts\activate.bat
-# No Linux/macOS:
+# Ativar (Linux/macOS):
 source .venv/bin/activate
 
-# Instalar as dependências
 pip install -r requirements.txt
 ```
 
-### 3. Configuração do Arquivo `.env`
-Copie o arquivo de exemplo `.env.example` para `.env`:
+### 3. Configurar `.env`
 
 ```bash
 cp .env.example .env
 ```
 
-Edite o arquivo `.env` inserindo sua chave da Kalodata:
+Edite `.env`:
 ```env
-KALODATA_SECRET_KEY=1c3f2274-20fb-4a01-92cf-45c9441dbe24
+KALODATA_SECRET_KEY=sua_chave_aqui
 KALODATA_BASE_URL=https://staging.kalodata.com
 PORT=8000
 HOST=0.0.0.0
 ```
-> **Nota**: Se sua chave for de ambiente de **produção**, altere a `KALODATA_BASE_URL` para o host de produção informado no e-mail de ativação da Kalodata.
+
+> **Nota**: Se sua chave for de **produção**, altere `KALODATA_BASE_URL` para o host fornecido no e-mail de ativação da Kalodata.
 
 ---
 
-## 🧪 Validando e Rodando Localmente
+## 🧪 Testes e Validação Local
 
-### Teste Rápido de Conexão com a API (sem MCP)
-Antes de iniciar o servidor MCP, você pode validar a chave de API e a conexão com a Kalodata rodando o script de teste local:
+### 1. Testar conexão direta com a API Kalodata (sem MCP)
 
 ```bash
 python test_local.py
 ```
 
-### Iniciar o Servidor MCP
-Para iniciar o servidor HTTP Streamable localmente:
+### 2. Iniciar o servidor MCP
 
 ```bash
 python server.py
 ```
-O servidor será iniciado por padrão na porta `8000` (ex: `http://localhost:8000`).
 
-### Testar com o MCP Inspector (Interface Visual de Teste)
-Você pode testar e interagir visualmente com todas as ferramentas MCP usando o Inspector oficial do protocolo MCP:
+Saída esperada nos logs:
+```
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[kalodata-mcp] Servidor iniciando em http://0.0.0.0:8000/mcp
+[kalodata-mcp] Transporte: streamable-http | 8 ferramentas registradas
+```
+
+### 3. Testar o endpoint `/mcp` via linha de comando
+
+O endpoint correto é **`/mcp`** (testado e confirmado localmente com HTTP 200).
+
+**Windows (PowerShell):**
+```powershell
+Invoke-WebRequest -Uri http://localhost:8000/mcp `
+  -Method POST `
+  -Headers @{"Accept"="application/json, text/event-stream"; "Content-Type"="application/json"} `
+  -Body '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' `
+  -UseBasicParsing | Select-Object -ExpandProperty Content
+```
+
+**Linux/macOS (curl):**
+```bash
+curl -s -N \
+  -H "Accept: application/json, text/event-stream" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' \
+  http://localhost:8000/mcp
+```
+
+Resposta esperada:
+```
+event: message
+data: {"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","serverInfo":{"name":"kalodata","version":"1.29.1"},...}}
+```
+
+> **Importante**: O Streamable HTTP exige os dois headers `Accept: application/json, text/event-stream`. Sem eles, o servidor retorna 406 Not Acceptable (comportamento correto do protocolo).
+
+### 4. Testar com MCP Inspector (interface visual)
 
 ```bash
 npx @modelcontextprotocol/inspector python server.py
@@ -90,64 +117,72 @@ npx @modelcontextprotocol/inspector python server.py
 
 ---
 
-## 🌐 Deploy Remoto (Hospedagem no Render.com)
+## 🌐 Deploy Remoto (Render.com)
 
-Para que o **Perplexity AI** possa se conectar ao seu servidor MCP via HTTPS remoto, você precisará hospedá-lo em uma plataforma com suporte a processos Python de longa duração. Recomendamos o **Render.com** (plano gratuito disponível):
+O projeto já inclui o arquivo `render.yaml` na raiz, permitindo deploy via **Blueprint** no Render.
 
-### Passo a Passo no Render:
+### Passo a Passo:
 
-1. **Repositório Git**:
-   - Inicialize um repositório Git na pasta do projeto e envie para o seu GitHub/GitLab:
-     ```bash
-     git init
-     git add .
-     git commit -m "Initial commit Kalodata MCP Server"
-     git remote add origin https://github.com/seu-usuario/kalodata-mcp.git
-     git push -u origin main
-     ```
+1. **Criar repositório no GitHub** e fazer push:
+   ```bash
+   git remote add origin https://github.com/seu-usuario/kalodata-mcp.git
+   git push -u origin master
+   ```
 
-2. **Criar Web Service no Render**:
-   - Acesse o painel do [Render.com](https://dashboard.render.com/) e clique em **New +** → **Web Service**.
-   - Conecte o repositório do seu projeto `kalodata-mcp`.
+2. Acesse [dashboard.render.com](https://dashboard.render.com) → **New +** → **Blueprint**.
 
-3. **Configurações do Serviço**:
-   - **Name**: `kalodata-mcp` (ou nome de sua preferência).
-   - **Environment**: `Python 3`.
-   - **Region**: Escolha a região mais próxima (ex: Oregon / Frankfurt).
-   - **Branch**: `main`.
-   - **Build Command**: `pip install -r requirements.txt`.
-   - **Start Command**: `python server.py`.
+3. Conecte o repositório. O Render detecta o `render.yaml` automaticamente.
 
-4. **Variáveis de Ambiente (Environment Variables)**:
-   - No painel do Render, vá em **Environment Variables** e adicione:
-     - `KALODATA_SECRET_KEY`: `sua_chave_de_api_da_kalodata`
-     - `KALODATA_BASE_URL`: `https://staging.kalodata.com` (ou URL de produção)
-     - `PORT`: `10000` (ou deixe o Render atribuir automaticamente)
+4. Configure as variáveis de ambiente manualmente no painel do Render:
+   - `KALODATA_SECRET_KEY`: sua chave da Kalodata (rotacionada/nova)
+   - `KALODATA_BASE_URL`: `https://staging.kalodata.com` (ou URL de produção)
 
-5. **Deploy**:
-   - Clique em **Create Web Service**. O Render vai compilar e gerar uma URL pública HTTPS para o seu aplicativo (ex: `https://kalodata-mcp.onrender.com`).
+5. Clique em **Apply**. O Render fará o build e gerará a URL pública (ex: `https://kalodata-mcp.onrender.com`).
+
+6. Teste o deploy:
+   ```bash
+   curl -s -N \
+     -H "Accept: application/json, text/event-stream" \
+     -H "Content-Type: application/json" \
+     -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' \
+     https://kalodata-mcp.onrender.com/mcp
+   ```
 
 ---
 
-## 🔗 Registrando o Conector no Perplexity AI
+## 🔗 Registrando no Perplexity AI
 
-Após o deploy remoto ter sido concluído com sucesso e a URL pública estar ativa, siga estes passos para registrar a Kalodata no **Perplexity AI**:
+1. Acesse **Perplexity AI** → **Configurações da Conta** → **Conectores**.
+2. Clique em **"+ Conector personalizado"**.
+3. Preencha:
+   - **Nome**: `Kalodata TikTok Shop Analytics`
+   - **Tipo**: `Remoto`
+   - **URL**: `https://kalodata-mcp.onrender.com/mcp`
+   - **Transporte**: `Streamable HTTP`
+   - **Autenticação**: `Nenhuma`
+4. Salve. O Perplexity descobrirá automaticamente as 8 ferramentas.
 
-1. Acesse sua conta no **Perplexity AI** (plano Pro / Enterprise).
-2. Vá nas **Configurações da Conta** (Settings) → aba **Conectores** (Connectors) ou **Custom Connectors**.
-3. Clique no botão **"+ Conector personalizado"** (Add Custom Connector).
-4. Preencha os campos da seguinte forma:
-   - **Nome do Conector**: `Kalodata TikTok Shop Analytics`
-   - **Tipo de Conector**: Selecione `Remoto` (Remote).
-   - **URL da Ferramenta / Servidor**: Cole a URL pública gerada no deploy (ex: `https://kalodata-mcp.onrender.com/mcp` ou `https://kalodata-mcp.onrender.com/sse`).
-   - **Transporte**: Selecione `Streamable HTTP` (ou `SSE`).
-   - **Tipo de Autenticação**: Selecione `Nenhuma` (None).
-     > *Por que nenhuma?* Porque a autenticação com a Kalodata já é feita de forma segura no servidor Python através da variável de ambiente `KALODATA_SECRET_KEY`, sem expor nenhuma chave no Perplexity AI.
-5. Clique em **Salvar / Testar Conexão**. O Perplexity irá descobrir automaticamente as 8 ferramentas expostas pelo seu servidor MCP.
+> **Por que "Nenhuma" autenticação?** A chave da Kalodata fica no servidor (variável de ambiente), nunca exposta ao Perplexity.
+
+---
+
+## ✅ Checklist de Deploy Manual (Tarefas Fora do Agente)
+
+Estas etapas dependem de contas externas e devem ser executadas por você manualmente:
+
+- [ ] **1. GitHub** — Criar repositório `kalodata-mcp` no GitHub (pode ser privado).
+- [ ] **2. Git Push** — Rodar `git remote add origin <URL>` e `git push -u origin master`.
+- [ ] **3. Render** — Criar conta em [render.com](https://render.com) se ainda não tiver.
+- [ ] **4. Blueprint** — No Render: **New +** → **Blueprint** → conectar repositório → detecta `render.yaml` automaticamente.
+- [ ] **5. Variáveis secretas** — No painel do Render, preencher `KALODATA_SECRET_KEY` e `KALODATA_BASE_URL` manualmente (nunca commite esses valores).
+- [ ] **6. Aguardar deploy** — O Render executa `pip install -r requirements.txt` e `python server.py`. Aguardar status "Live".
+- [ ] **7. Testar endpoint público** — Copiar a URL gerada (ex: `https://kalodata-mcp.onrender.com`) e testar o endpoint `/mcp` com curl.
+- [ ] **8. Perplexity** — Ir em **Configurações → Conectores → + Conector personalizado → Remoto** → colar `https://<url>/mcp` → Streamable HTTP → Autenticação: Nenhuma.
 
 ---
 
 ## 🔒 Aviso de Segurança
 
-- **NUNCA comite o arquivo `.env` com a sua chave real no Git.** O arquivo `.gitignore` já está pré-configurado para ignorar o `.env`.
-- A chave de API da Kalodata fica armazenada com total segurança exclusivamente na variável de ambiente do seu servidor (localmente no `.env` e no painel do Render.com na nuvem).
+- **NUNCA comite o arquivo `.env`** com chave real. O `.gitignore` já o ignora.
+- **NUNCA adicione a chave dentro do `render.yaml`** — as variáveis `sync: false` são inseridas manualmente no dashboard do Render.
+- A chave da Kalodata vive apenas na variável de ambiente do servidor, nunca exposta ao cliente MCP.
