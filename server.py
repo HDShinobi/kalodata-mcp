@@ -200,7 +200,7 @@ async def creator_rank(
     shop_id: Optional[str] = None,
     revenue_range: Optional[Dict[str, Any]] = None,
     creator_type: Optional[str] = None,
-    followers_range: Optional[Dict[str, Any]] = None,
+    followers_range: Optional[str] = None,
     engagement_rate: Optional[str] = None,
     sort_field: Optional[Dict[str, str]] = None,
     page_number: int = 1
@@ -274,7 +274,7 @@ async def video_rank(
     creator_id: Optional[str] = None,
     product_id: Optional[str] = None,
     revenue_range: Optional[Dict[str, Any]] = None,
-    followers_range: Optional[Dict[str, Any]] = None,
+    followers_range: Optional[str] = None,
     ads_roas: Optional[Dict[str, Any]] = None,
     sort_field: Optional[Dict[str, str]] = None,
     page_number: int = 1
