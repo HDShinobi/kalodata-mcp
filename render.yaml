@@ -6,9 +6,13 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python server.py
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
       - key: KALODATA_SECRET_KEY
         sync: false
       - key: KALODATA_BASE_URL
         sync: false
+      - key: MCP_AUTH_TOKEN
+        generateValue: true
       - key: HOST
         value: 0.0.0.0
